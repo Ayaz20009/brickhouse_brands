@@ -22,7 +22,7 @@ struct Args {
     #[arg(
         short,
         long,
-        default_value = "postgresql://username:password@localhost/postgres?sslmode=disable"
+        default_value = "postgresql://username:password@localhost/postgres?sslmode=require"
     )]
     database_url: String,
 
@@ -225,7 +225,7 @@ async fn measure_baseline_latency(
     disable_logging: bool,
 ) -> anyhow::Result<f64> {
     // Extract host from database URL
-    let config = database_url.parse::<Config>()?;
+    let config = parse_database_url(database_url)?;
     let host = config.get_hosts().first().unwrap().clone();
     let hostname = match host {
         tokio_postgres::config::Host::Tcp(ref h) => h,
@@ -258,12 +258,58 @@ async fn measure_baseline_latency(
     Ok(total_latency / ping_count as f64)
 }
 
+/// Parse database URL manually to handle JWT tokens in password
+fn parse_database_url(database_url: &str) -> anyhow::Result<Config> {
+    // Remove the postgresql:// or postgres:// prefix
+    let url = database_url
+        .strip_prefix("postgresql://")
+        .or_else(|| database_url.strip_prefix("postgres://"))
+        .ok_or_else(|| anyhow::anyhow!("Invalid database URL format"))?;
+    
+    // Split into components
+    let (credentials, rest) = url.split_once('@')
+        .ok_or_else(|| anyhow::anyhow!("Missing @ in database URL"))?;
+    
+    let (user, password) = credentials.split_once(':')
+        .ok_or_else(|| anyhow::anyhow!("Missing password in database URL"))?;
+    
+    // Parse host, port, database, and query params
+    let (host_port, db_and_params) = rest.split_once('/')
+        .ok_or_else(|| anyhow::anyhow!("Missing / in database URL"))?;
+    
+    let (host, port) = if host_port.contains(':') {
+        let (h, p) = host_port.split_once(':')
+            .ok_or_else(|| anyhow::anyhow!("Invalid host:port format"))?;
+        (h, p.parse::<u16>().unwrap_or(5432))
+    } else {
+        (host_port, 5432)
+    };
+    
+    let (database, _params) = db_and_params.split_once('?')
+        .unwrap_or((db_and_params, ""));
+    
+    // URL decode the password (handles JWT tokens)
+    let decoded_password = urlencoding::decode(password)
+        .map_err(|e| anyhow::anyhow!("Failed to decode password: {}", e))?;
+    
+    // Build config manually
+    let mut config = Config::new();
+    config.host(host);
+    config.port(port);
+    config.user(user);
+    config.password(decoded_password.as_bytes());
+    config.dbname(database);
+    config.ssl_mode(tokio_postgres::config::SslMode::Require);
+    
+    Ok(config)
+}
+
 async fn create_connection_pool(
     database_url: &str,
     max_connections: usize,
 ) -> anyhow::Result<Pool> {
-    // Parse the database URL
-    let pg_config = database_url.parse::<Config>()?;
+    // Parse the database URL - handle JWT tokens in password
+    let pg_config = parse_database_url(database_url)?;
 
     // Create TLS connector
     let tls_connector = TlsConnector::new()?;

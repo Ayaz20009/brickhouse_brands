@@ -7,7 +7,7 @@ import os
 from typing import Optional, Dict, Any
 import pathlib
 
-from app.routers import stores, inventory, orders, users, products
+from app.routers import stores, inventory, orders, users, products, notifications
 from app.database.connection import init_connection_pool, close_connection_pool
 from app.config import app_config
 from app.auth import databricks_auth
@@ -168,6 +168,12 @@ app.include_router(
     products.router,
     prefix=f"{API_PREFIX}/products",
     tags=["products"],
+    dependencies=[Depends(get_user_context)],
+)
+app.include_router(
+    notifications.router,
+    prefix=f"{API_PREFIX}/notifications",
+    tags=["notifications"],
     dependencies=[Depends(get_user_context)],
 )
 

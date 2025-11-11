@@ -13,6 +13,7 @@ import { Settings, LogOut, Moon, Sun } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
 import { useDarkModeStore } from "@/store/useDarkModeStore";
 import { useDateStore } from "@/store/useDateStore";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface NavigationProps {
   activeTab: 'order-management' | 'insights';
@@ -118,8 +119,12 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
               </div>
             </div>
 
-            {/* Right section: User Avatar */}
-            <div className="flex items-center">
+            {/* Right section: Notifications & User Avatar */}
+            <div className="flex items-center gap-2">
+              {/* Notification Bell */}
+              <NotificationBell />
+              
+              {/* User Avatar */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={`relative h-10 w-10 rounded-full ${isDarkMode ? 'hover:bg-gray-800' : ''

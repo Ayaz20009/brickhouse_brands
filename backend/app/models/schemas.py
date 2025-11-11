@@ -4,6 +4,53 @@ from datetime import datetime, date
 from enum import Enum
 
 
+# Notification related models
+class NotificationType(str, Enum):
+    LOW_STOCK = "low_stock"
+    OUT_OF_STOCK = "out_of_stock"
+    REORDER_NEEDED = "reorder_needed"
+    CRITICAL = "critical"
+
+
+class NotificationSeverity(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class Notification(BaseModel):
+    notification_id: int
+    notification_type: NotificationType
+    product_id: int
+    store_id: int
+    inventory_id: Optional[int]
+    current_stock: int
+    reorder_threshold: int
+    severity: NotificationSeverity
+    message: str
+    is_read: bool
+    is_resolved: bool
+    created_at: datetime
+    updated_at: datetime
+    resolved_at: Optional[datetime]
+    # Optional joined data
+    product_name: Optional[str] = None
+    store_name: Optional[str] = None
+    category: Optional[str] = None
+    region: Optional[str] = None
+
+
+class NotificationSummary(BaseModel):
+    total: int
+    critical: int
+    high: int
+    medium: int
+    low: int
+    unread: int
+    unresolved: int
+
+
 # Store related models
 class StoreType(str, Enum):
     WAREHOUSE = "Warehouse"
