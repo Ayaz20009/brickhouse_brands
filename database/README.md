@@ -26,6 +26,15 @@ The application uses a normalized PostgreSQL schema designed for inventory manag
 - **`users`** - User accounts with role-based access (store managers, regional managers)
 - **`inventory`** - Stock levels across all product/store combinations
 - **`orders`** - Order lifecycle management with approval workflows
+- **`notifications`** - Low stock alerts and system notifications
+
+### Enhanced Tracking Tables (schema_enhancements.sql)
+
+- **`audit_logs`** - Complete audit trail of all database changes for compliance
+- **`user_activity`** - User session tracking and activity analytics
+- **`inventory_history`** - Historical record of all inventory movements
+- **`order_status_history`** - Complete order lifecycle tracking
+- **`notification_preferences`** - User notification delivery preferences
 
 ### Schema Design
 
