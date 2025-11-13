@@ -17,15 +17,15 @@ interface DateFilterState {
   hasDateFilter: () => boolean;
 }
 
-// Start with past 30 days by default
-const defaultDateRange = getLastDaysRange(30);
+// Start with no date filter (All Time) by default
+// const defaultDateRange = getLastDaysRange(30);
 
 export const useDateFilterStore = create<DateFilterState>()(
   devtools(
     (set, get) => ({
-      // Initial state - start with 30 days
-      dateFrom: defaultDateRange.from,
-      dateTo: defaultDateRange.to,
+      // Initial state - no date filter (All Time)
+      dateFrom: undefined,
+      dateTo: undefined,
 
       // Actions
       setDateFilter: (dateFrom: string | undefined, dateTo: string | undefined) => {
